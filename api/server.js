@@ -25,6 +25,13 @@ if (process.env.NODE_ENV === "production") {
 
 app.use(morgan("tiny"));
 
+// Health check liviano para keep-alive (UptimeRobot). No toca la DB.
+// Sirve para el truco anti-cold-start de Render: un monitor pinguea esta URL
+// cada 5 min y evita que el backend free se duerma.
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "ok", uptime: process.uptime() });
+});
+
 // API Routes
 app.use("/api", authAPI);
 

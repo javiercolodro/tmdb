@@ -29,6 +29,21 @@ const App = () => {
   const dispatch = useDispatch();
   const [userId, setUserId] = useState(null);
 
+  // Carga inicial de sesión: golpea el backend (Render free).
+  const [authLoading, setAuthLoading] = useState(true);
+  // Si la carga tarda más de 4s, probablemente el backend está despertando
+  // de un cold start: mostramos un mensaje aclaratorio.
+  const [showWakingMessage, setShowWakingMessage] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading) {
+      setShowWakingMessage(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowWakingMessage(true), 4000);
+    return () => clearTimeout(timer);
+  }, [authLoading]);
+
   // SET_USERS
   useEffect(() => {
     axios
@@ -38,7 +53,8 @@ const App = () => {
         dispatch(setUser(user.user));
         setUserId(user.user.id); // Guardar el userId para cargar favoritos
       })
-      .catch(() => console.log("Necesitas loguearte con tu cuenta"));
+      .catch(() => console.log("Necesitas loguearte con tu cuenta"))
+      .finally(() => setAuthLoading(false));
   }, [dispatch]);
 
   //ESTE SERIA EL NUEVO SET_FAVORITOS - Solo carga cuando hay userId
@@ -76,6 +92,26 @@ const App = () => {
   return (
     <>
       <BrowserRouter>
+        {showWakingMessage && (
+          <div
+            role="status"
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 9999,
+              background: "rgba(0, 0, 0, 0.85)",
+              color: "#ffffff",
+              textAlign: "center",
+              padding: "10px 15px",
+              fontSize: "14px",
+            }}
+          >
+            Starting the server, this may take up to a minute on the first
+            visit...
+          </div>
+        )}
         <ToastContainer
           toastStyle={{
             width: "400px",
